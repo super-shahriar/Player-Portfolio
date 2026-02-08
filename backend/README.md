@@ -65,7 +65,7 @@ This project is like a super-powered digital notebook for volleyball players! It
 
 1. Open a terminal (like a command window).
 2. Go to the backend folder: `cd backend`
-3. Make a virtual environment: `python -m venv venv && venv\Scripts\activate`
+3. Make a virtual environment: `python -m venv venv` followed by `venv\Scripts\activate`
 4. Install the tools: `pip install -r requirements.txt`
 5. Copy `.env.example` to `.env` and fill in your MongoDB info.
 6. Start the server: `uvicorn app.main:app --reload`

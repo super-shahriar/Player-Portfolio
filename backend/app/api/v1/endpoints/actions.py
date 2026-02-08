@@ -4,7 +4,7 @@ Handles user interactions with stories and content.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.mongodb import get_database
 from app.crud.crud_story import CRUDStory, get_story_crud

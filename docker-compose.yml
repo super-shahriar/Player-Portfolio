@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    networks:
+      - portfolio-net
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - portfolio-net
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - portfolio-net
+volumes:
+  mongo-data:
+networks:
+  portfolio-net:
+    driver: bridge
