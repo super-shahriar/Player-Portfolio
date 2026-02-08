@@ -4,7 +4,7 @@ Represents the internal BSON structure stored in the database.
 """
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from app.models.py_object_id import PydanticObjectId
 from bson import ObjectId
@@ -91,12 +91,12 @@ class AthleteModel(BaseModel):
     bio: Optional[str] = Field(None, max_length=1000)
     
     # Nested performance stats
-    performance_stats: Optional[PerformanceStats] = Field(default_factory=PerformanceStats)
+    performance_stats: Optional[PerformanceStats] = None
     
     # Status and metadata
     is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     model_config = ConfigDict(
         populate_by_name=True,

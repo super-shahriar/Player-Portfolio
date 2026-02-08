@@ -2,8 +2,8 @@
 CRUD operations for Athlete entity (Repository Layer).
 Handles all database interactions for athletes using async Motor driver.
 """
-from typing import Optional, List
-from datetime import datetime
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timezone
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo import ReturnDocument
@@ -12,10 +12,13 @@ from app.models.athlete import AthleteModel, PerformanceStats
 from app.schemas.athlete import AthleteCreate, AthleteUpdate
 
 
+DatabaseType = AsyncIOMotorDatabase[Dict[str, Any]]
+
+
 class CRUDAthlete:
     """Repository class for Athlete CRUD operations."""
     
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: DatabaseType):
         """
         Initialize CRUD with database instance.
         
@@ -35,9 +38,9 @@ class CRUDAthlete:
             AthleteModel: Created athlete with generated ID
         """
         # Prepare document
-        athlete_dict = athlete_data.model_dump(exclude_unset=True)
-        athlete_dict["created_at"] = datetime.utcnow()
-        athlete_dict["updated_at"] = datetime.utcnow()
+        athlete_dict: Dict[str, Any] = athlete_data.model_dump(exclude_unset=True)
+        athlete_dict["created_at"] = datetime.now(timezone.utc)
+        athlete_dict["updated_at"] = datetime.now(timezone.utc)
         athlete_dict["performance_stats"] = {}  # Initialize empty stats
         
         # Insert into database
@@ -45,6 +48,8 @@ class CRUDAthlete:
         
         # Fetch and return created document
         created_athlete = await self.collection.find_one({"_id": result.inserted_id})
+        if not created_athlete:
+            raise RuntimeError("Failed to create athlete document")
         return AthleteModel(**created_athlete)
     
     async def get_athlete(self, athlete_id: str) -> Optional[AthleteModel]:
@@ -124,7 +129,7 @@ class CRUDAthlete:
             return await self.get_athlete(athlete_id)
         
         # Add updated_at timestamp
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = datetime.now(timezone.utc)
         
         # Update document atomically
         updated_athlete = await self.collection.find_one_and_update(
@@ -140,7 +145,7 @@ class CRUDAthlete:
     async def update_performance(
         self,
         athlete_id: str,
-        performance_data: dict
+        performance_data: Dict[str, Any]
     ) -> Optional[AthleteModel]:
         """
         Atomically update only the performance stats using MongoDB's $set operator.
@@ -167,8 +172,8 @@ class CRUDAthlete:
             f"performance_stats.{key}": value 
             for key, value in validated_data.items()
         }
-        update_fields["performance_stats.last_tested"] = datetime.utcnow()
-        update_fields["updated_at"] = datetime.utcnow()
+        update_fields["performance_stats.last_tested"] = datetime.now(timezone.utc)
+        update_fields["updated_at"] = datetime.now(timezone.utc)
         
         # Atomically update only the performance stats
         updated_athlete = await self.collection.find_one_and_update(
@@ -214,7 +219,7 @@ class CRUDAthlete:
         return await self.collection.count_documents(query)
 
 
-def get_athlete_crud(db: AsyncIOMotorDatabase) -> CRUDAthlete:
+def get_athlete_crud(db: DatabaseType) -> CRUDAthlete:
     """
     Dependency function to get CRUDAthlete instance.
     

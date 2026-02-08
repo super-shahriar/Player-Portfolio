@@ -2,8 +2,8 @@
 CRUD operations for Performance Stats entity (Repository Layer).
 Handles database interactions for athlete statistics using async Motor driver.
 """
-from typing import Optional, List
-from datetime import datetime
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timezone
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo import ReturnDocument
@@ -11,10 +11,14 @@ from pymongo import ReturnDocument
 from app.schemas.stats import StatsCreate, StatsUpdate, StatsResponse, StatsWithCalculations
 
 
+DatabaseType = AsyncIOMotorDatabase[Dict[str, Any]]
+StatsDocument = Dict[str, Any]
+
+
 class CRUDStats:
     """Repository class for Stats CRUD operations."""
     
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: DatabaseType):
         """
         Initialize CRUD with database instance.
         
@@ -23,7 +27,7 @@ class CRUDStats:
         """
         self.collection = db["stats"]
     
-    async def create_stats(self, stats_data: StatsCreate) -> dict:
+    async def create_stats(self, stats_data: StatsCreate) -> StatsDocument:
         """
         Create a new stats document in the database.
         
@@ -39,20 +43,22 @@ class CRUDStats:
             raise ValueError("Invalid athlete ID")
         
         # Prepare document
-        stats_dict = stats_data.model_dump(exclude_unset=True)
-        stats_dict["created_at"] = datetime.utcnow()
-        stats_dict["updated_at"] = datetime.utcnow()
+        stats_dict: StatsDocument = stats_data.model_dump(exclude_unset=True)
+        stats_dict["created_at"] = datetime.now(timezone.utc)
+        stats_dict["updated_at"] = datetime.now(timezone.utc)
         
         # Insert into database
         result = await self.collection.insert_one(stats_dict)
         
         # Fetch and return created document
         created_stats = await self.collection.find_one({"_id": result.inserted_id})
+        if not created_stats:
+            raise RuntimeError("Failed to create stats document")
         created_stats["id"] = str(created_stats.pop("_id"))
         
         return self._add_calculated_fields(created_stats)
     
-    async def get_stats(self, stats_id: str) -> Optional[dict]:
+    async def get_stats(self, stats_id: str) -> Optional[StatsDocument]:
         """
         Fetch stats by ID.
         
@@ -76,7 +82,7 @@ class CRUDStats:
         self,
         athlete_id: str,
         season: Optional[str] = None
-    ) -> List[dict]:
+    ) -> List[StatsDocument]:
         """
         Fetch all stats for a specific athlete.
         
@@ -94,7 +100,7 @@ class CRUDStats:
         cursor = self.collection.find(query).sort("created_at", -1)
         stats_list = await cursor.to_list(length=100)
         
-        result = []
+        result: List[StatsDocument] = []
         for stats in stats_list:
             stats["id"] = str(stats.pop("_id"))
             result.append(self._add_calculated_fields(stats))
@@ -105,7 +111,7 @@ class CRUDStats:
         self,
         stats_id: str,
         stats_update: StatsUpdate
-    ) -> Optional[dict]:
+    ) -> Optional[StatsDocument]:
         """
         Update statistics information.
         
@@ -126,7 +132,7 @@ class CRUDStats:
             return await self.get_stats(stats_id)
         
         # Add updated_at timestamp
-        update_data["updated_at"] = datetime.utcnow()
+        update_data["updated_at"] = datetime.now(timezone.utc)
         
         # Update document atomically
         updated_stats = await self.collection.find_one_and_update(
@@ -156,7 +162,7 @@ class CRUDStats:
         result = await self.collection.delete_one({"_id": ObjectId(stats_id)})
         return result.deleted_count > 0
     
-    def _add_calculated_fields(self, stats_doc: dict) -> dict:
+    def _add_calculated_fields(self, stats_doc: StatsDocument) -> StatsDocument:
         """
         Add calculated percentage fields to stats document.
         
@@ -199,7 +205,7 @@ class CRUDStats:
         return stats_doc
 
 
-def get_stats_crud(db: AsyncIOMotorDatabase) -> CRUDStats:
+def get_stats_crud(db: DatabaseType) -> CRUDStats:
     """
     Dependency function to get CRUDStats instance.
     

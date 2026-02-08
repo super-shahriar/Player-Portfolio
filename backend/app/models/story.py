@@ -2,9 +2,9 @@
 MongoDB document model for Story/Highlight entity.
 Represents stories, highlights, and social interactions (likes, claps).
 """
-from pydantic import BaseModel, Field, ConfigDict, HttpUrl
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from app.models.py_object_id import PydanticObjectId
 
@@ -21,7 +21,7 @@ class Reaction(BaseModel):
     """User reaction to a story."""
     user_id: str = Field(..., description="ID of user who reacted")
     reaction_type: str = Field(..., description="Type: 'like', 'clap', 'fire', etc.")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     model_config = ConfigDict(populate_by_name=True)
 
@@ -57,8 +57,8 @@ class StoryModel(BaseModel):
     expires_at: Optional[datetime] = Field(None, description="Story expiration (24 hours)")
     
     # Metadata
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc)) # pyright: ignore[reportDeprecated]
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     model_config = ConfigDict(
         populate_by_name=True,

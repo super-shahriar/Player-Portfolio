@@ -2,17 +2,21 @@
 CRUD operations for Story/Highlight entity (Repository Layer).
 Handles database interactions for stories, highlights, and social actions.
 """
-from typing import Optional, List
-from datetime import datetime, timedelta
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo import ReturnDocument
 
 
+StoryDocument = Dict[str, Any]
+ReactionDocument = Dict[str, Any]
+
+
 class CRUDStory:
     """Repository class for Story CRUD operations."""
     
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncIOMotorDatabase[Dict[str, Any]]):
         """
         Initialize CRUD with database instance.
         
@@ -21,7 +25,7 @@ class CRUDStory:
         """
         self.collection = db["stories"]
     
-    async def create_story(self, story_data: dict) -> dict:
+    async def create_story(self, story_data: StoryDocument) -> StoryDocument:
         """
         Create a new story or highlight.
         
@@ -32,8 +36,8 @@ class CRUDStory:
             Created story document
         """
         # Set timestamps
-        story_data["created_at"] = datetime.utcnow()
-        story_data["updated_at"] = datetime.utcnow()
+        story_data["created_at"] = datetime.now(timezone.utc)
+        story_data["updated_at"] = datetime.now(timezone.utc)
         
         # Initialize engagement fields
         if "likes" not in story_data:
@@ -47,7 +51,7 @@ class CRUDStory:
         
         # Set expiration for regular stories (24 hours)
         if not story_data.get("is_highlight", False):
-            story_data["expires_at"] = datetime.utcnow() + timedelta(hours=24)
+            story_data["expires_at"] = datetime.now(timezone.utc) + timedelta(hours=24)
             story_data["is_active"] = True
         else:
             # Highlights don't expire
@@ -57,12 +61,14 @@ class CRUDStory:
         # Insert
         result = await self.collection.insert_one(story_data)
         created_story = await self.collection.find_one({"_id": result.inserted_id})
+        if not created_story:
+            raise RuntimeError("Failed to create story document")
         
         # Convert _id to id
         created_story["id"] = str(created_story.pop("_id"))
         return created_story
     
-    async def get_story(self, story_id: str, increment_view: bool = False) -> Optional[dict]:
+    async def get_story(self, story_id: str, increment_view: bool = False) -> Optional[StoryDocument]:
         """
         Get a story by ID.
         
@@ -95,7 +101,7 @@ class CRUDStory:
         self,
         athlete_id: str,
         include_expired: bool = False
-    ) -> List[dict]:
+    ) -> List[StoryDocument]:
         """
         Get all active stories for an athlete.
         
@@ -113,7 +119,7 @@ class CRUDStory:
         
         if not include_expired:
             query["$or"] = [
-                {"expires_at": {"$gt": datetime.utcnow()}},
+                {"expires_at": {"$gt": datetime.now(timezone.utc)}},
                 {"expires_at": None}
             ]
         
@@ -126,7 +132,7 @@ class CRUDStory:
         
         return stories
     
-    async def get_highlights(self, athlete_id: str) -> List[dict]:
+    async def get_highlights(self, athlete_id: str) -> List[StoryDocument]:
         """
         Get all highlights for an athlete.
         
@@ -168,7 +174,7 @@ class CRUDStory:
             {"_id": ObjectId(story_id)},
             {
                 "$addToSet": {"likes": user_id},
-                "$set": {"updated_at": datetime.utcnow()}
+                "$set": {"updated_at": datetime.now(timezone.utc)}
             }
         )
         
@@ -192,7 +198,7 @@ class CRUDStory:
             {"_id": ObjectId(story_id)},
             {
                 "$pull": {"likes": user_id},
-                "$set": {"updated_at": datetime.utcnow()}
+                "$set": {"updated_at": datetime.now(timezone.utc)}
             }
         )
         
@@ -216,7 +222,7 @@ class CRUDStory:
             {"_id": ObjectId(story_id)},
             {
                 "$addToSet": {"claps": user_id},
-                "$set": {"updated_at": datetime.utcnow()}
+                "$set": {"updated_at": datetime.now(timezone.utc)}
             }
         )
         
@@ -240,13 +246,13 @@ class CRUDStory:
             {"_id": ObjectId(story_id)},
             {
                 "$pull": {"claps": user_id},
-                "$set": {"updated_at": datetime.utcnow()}
+                "$set": {"updated_at": datetime.now(timezone.utc)}
             }
         )
         
         return result.modified_count > 0 or result.matched_count > 0
     
-    async def add_reaction(self, story_id: str, reaction_data: dict) -> bool:
+    async def add_reaction(self, story_id: str, reaction_data: ReactionDocument) -> bool:
         """
         Add a reaction to a story.
         
@@ -260,13 +266,13 @@ class CRUDStory:
         if not ObjectId.is_valid(story_id):
             return False
         
-        reaction_data["created_at"] = datetime.utcnow()
+        reaction_data["created_at"] = datetime.now(timezone.utc)
         
         result = await self.collection.update_one(
             {"_id": ObjectId(story_id)},
             {
                 "$push": {"reactions": reaction_data},
-                "$set": {"updated_at": datetime.utcnow()}
+                "$set": {"updated_at": datetime.now(timezone.utc)}
             }
         )
         
@@ -297,13 +303,13 @@ class CRUDStory:
         """
         result = await self.collection.delete_many({
             "is_highlight": False,
-            "expires_at": {"$lt": datetime.utcnow()}
+            "expires_at": {"$lt": datetime.now(timezone.utc)}
         })
         
         return result.deleted_count
 
 
-def get_story_crud(db: AsyncIOMotorDatabase) -> CRUDStory:
+def get_story_crud(db: AsyncIOMotorDatabase[Dict[str, Any]]) -> CRUDStory:
     """
     Dependency function to get CRUDStory instance.
     

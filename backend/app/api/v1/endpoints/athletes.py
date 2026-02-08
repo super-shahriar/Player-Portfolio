@@ -3,15 +3,34 @@ FastAPI route endpoints for Athlete management (Controller Layer).
 Handles HTTP requests and delegates business logic to CRUD layer.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import List, Optional
-
+from typing import Any, Dict, List, Optional
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.mongodb import get_database
 from app.crud.crud_athlete import CRUDAthlete, get_athlete_crud
 from app.schemas.athlete import AthleteCreate, AthleteUpdate, AthleteResponse
 from app.models.athlete import PerformanceStats
+import logging
 
+logger = logging.getLogger("athletes")
+handler = logging.StreamHandler()
+formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 router = APIRouter(prefix="/athletes", tags=["Athletes"])
+
+DatabaseType = AsyncIOMotorDatabase[Dict[str, Any]]
+
+
+def _ensure_db(db: Optional[DatabaseType]) -> DatabaseType:
+    """Ensure the MongoDB dependency is available."""
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection is not available"
+        )
+    return db
 
 
 @router.post(
@@ -23,8 +42,9 @@ router = APIRouter(prefix="/athletes", tags=["Athletes"])
 )
 async def create_athlete(
     athlete_data: AthleteCreate,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> AthleteResponse:
+    logger.info("POST /athletes called")
     """
     Create a new athlete.
     
@@ -35,7 +55,8 @@ async def create_athlete(
     Returns:
         Created athlete with generated ID
     """
-    crud = get_athlete_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDAthlete = get_athlete_crud(database)
     athlete = await crud.create_athlete(athlete_data)
     
     # Convert to response model
@@ -53,8 +74,9 @@ async def create_athlete(
 )
 async def get_athlete(
     athlete_id: str,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> AthleteResponse:
+    logger.info(f"GET /athletes/{athlete_id} called")
     """
     Get athlete by ID.
     
@@ -68,7 +90,8 @@ async def get_athlete(
     Raises:
         HTTPException: 404 if athlete not found
     """
-    crud = get_athlete_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDAthlete = get_athlete_crud(database)
     athlete = await crud.get_athlete(athlete_id)
     
     if not athlete:
@@ -94,8 +117,9 @@ async def list_athletes(
     limit: int = Query(100, ge=1, le=500, description="Maximum number of records to return"),
     position: Optional[str] = Query(None, description="Filter by position"),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> List[AthleteResponse]:
+    logger.info("GET /athletes called")
     """
     List athletes with filtering and pagination.
     
@@ -109,7 +133,8 @@ async def list_athletes(
     Returns:
         List of athlete profiles
     """
-    crud = get_athlete_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDAthlete = get_athlete_crud(database)
     athletes = await crud.get_athletes(
         skip=skip,
         limit=limit,
@@ -135,7 +160,7 @@ async def list_athletes(
 async def update_athlete(
     athlete_id: str,
     athlete_update: AthleteUpdate,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> AthleteResponse:
     """
     Update athlete information.
@@ -151,7 +176,8 @@ async def update_athlete(
     Raises:
         HTTPException: 404 if athlete not found
     """
-    crud = get_athlete_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDAthlete = get_athlete_crud(database)
     athlete = await crud.update_athlete(athlete_id, athlete_update)
     
     if not athlete:
@@ -175,7 +201,7 @@ async def update_athlete(
 async def update_performance_stats(
     athlete_id: str,
     performance_data: PerformanceStats,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> AthleteResponse:
     """
     Update athlete's performance statistics.
@@ -194,10 +220,11 @@ async def update_performance_stats(
     Raises:
         HTTPException: 404 if athlete not found, 400 if invalid data
     """
-    crud = get_athlete_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDAthlete = get_athlete_crud(database)
     
     # Convert to dict for atomic update
-    perf_dict = performance_data.model_dump(exclude_unset=True)
+    perf_dict: Dict[str, Any] = performance_data.model_dump(exclude_unset=True)
     
     athlete = await crud.update_performance(athlete_id, perf_dict)
     
@@ -221,7 +248,7 @@ async def update_performance_stats(
 )
 async def delete_athlete(
     athlete_id: str,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> None:
     """
     Delete an athlete.
@@ -233,7 +260,8 @@ async def delete_athlete(
     Raises:
         HTTPException: 404 if athlete not found
     """
-    crud = get_athlete_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDAthlete = get_athlete_crud(database)
     deleted = await crud.delete_athlete(athlete_id)
     
     if not deleted:
@@ -245,14 +273,14 @@ async def delete_athlete(
 
 @router.get(
     "/count/total",
-    response_model=dict,
+    response_model=Dict[str, int],
     summary="Count athletes",
     description="Get the total count of athletes, optionally filtered by active status."
 )
 async def count_athletes(
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
-    db = Depends(get_database)
-) -> dict:
+    db: Optional[DatabaseType] = Depends(get_database)
+) -> Dict[str, int]:
     """
     Count total athletes.
     
@@ -263,7 +291,9 @@ async def count_athletes(
     Returns:
         Dictionary with count
     """
-    crud = get_athlete_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDAthlete = get_athlete_crud(database)
     count = await crud.count_athletes(is_active=is_active)
     
-    return {"count": count}
+    result: Dict[str, int] = {"count": count}
+    return result

@@ -4,13 +4,33 @@ Handles user interactions with stories and content.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from typing import Optional
-
+from typing import Any, Dict, List, Optional
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.mongodb import get_database
 from app.crud.crud_story import CRUDStory, get_story_crud
+import logging
 
+logger = logging.getLogger("actions")
+handler = logging.StreamHandler()
+formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 router = APIRouter(prefix="/actions", tags=["Social Actions"])
+
+DatabaseType = AsyncIOMotorDatabase[Dict[str, Any]]
+StoryDocument = Dict[str, Any]
+
+
+def _ensure_db(db: Optional[DatabaseType]) -> DatabaseType:
+    """Ensure an active database connection is available."""
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection is not available"
+        )
+    return db
 
 
 class LikeRequest(BaseModel):
@@ -49,8 +69,9 @@ class ActionResponse(BaseModel):
 )
 async def like_story(
     request: LikeRequest,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> ActionResponse:
+    logger.info(f"POST /actions/like called for story_id={request.story_id} user_id={request.user_id}")
     """
     Like or unlike a story.
     
@@ -61,11 +82,12 @@ async def like_story(
     Returns:
         Action response with updated like count
     """
-    crud = get_story_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDStory = get_story_crud(database)
     
     # Check if story exists
-    story = await crud.get_story(request.story_id)
-    if not story:
+    story: Optional[StoryDocument] = await crud.get_story(request.story_id)
+    if story is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Story not found"
@@ -84,6 +106,11 @@ async def like_story(
     
     if result:
         updated_story = await crud.get_story(request.story_id)
+        if updated_story is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unable to refresh story after like update"
+            )
         return ActionResponse(
             success=True,
             message=message,
@@ -104,8 +131,9 @@ async def like_story(
 )
 async def clap_story(
     request: ClapRequest,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> ActionResponse:
+    logger.info(f"POST /actions/clap called for story_id={request.story_id} user_id={request.user_id}")
     """
     Clap or unclap a story.
     
@@ -116,11 +144,12 @@ async def clap_story(
     Returns:
         Action response with updated clap count
     """
-    crud = get_story_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDStory = get_story_crud(database)
     
     # Check if story exists
-    story = await crud.get_story(request.story_id)
-    if not story:
+    story: Optional[StoryDocument] = await crud.get_story(request.story_id)
+    if story is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Story not found"
@@ -139,6 +168,11 @@ async def clap_story(
     
     if result:
         updated_story = await crud.get_story(request.story_id)
+        if updated_story is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unable to refresh story after clap update"
+            )
         return ActionResponse(
             success=True,
             message=message,
@@ -159,8 +193,9 @@ async def clap_story(
 )
 async def add_reaction(
     request: ReactionRequest,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> ActionResponse:
+    logger.info(f"POST /actions/reaction called for story_id={request.story_id} user_id={request.user_id} reaction={request.reaction_type}")
     """
     Add a reaction to a story.
     
@@ -171,11 +206,12 @@ async def add_reaction(
     Returns:
         Action response
     """
-    crud = get_story_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDStory = get_story_crud(database)
     
     # Check if story exists
-    story = await crud.get_story(request.story_id)
-    if not story:
+    story: Optional[StoryDocument] = await crud.get_story(request.story_id)
+    if story is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Story not found"
@@ -191,6 +227,11 @@ async def add_reaction(
     
     if result:
         updated_story = await crud.get_story(request.story_id)
+        if updated_story is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unable to refresh story after reaction update"
+            )
         return ActionResponse(
             success=True,
             message=f"Reaction '{request.reaction_type}' added",
@@ -212,8 +253,9 @@ async def add_reaction(
 async def unlike_story(
     story_id: str,
     user_id: str,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> ActionResponse:
+    logger.info(f"DELETE /actions/unlike/{story_id}/{user_id} called")
     """
     Remove a like from a story.
     
@@ -225,11 +267,17 @@ async def unlike_story(
     Returns:
         Action response
     """
-    crud = get_story_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDStory = get_story_crud(database)
     result = await crud.remove_like(story_id, user_id)
     
     if result:
         updated_story = await crud.get_story(story_id)
+        if updated_story is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unable to refresh story after unlike"
+            )
         return ActionResponse(
             success=True,
             message="Like removed",

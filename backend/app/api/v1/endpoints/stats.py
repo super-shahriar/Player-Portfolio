@@ -3,14 +3,34 @@ FastAPI route endpoints for Performance Stats management (Controller Layer).
 Handles HTTP requests for athlete statistics and delegates to CRUD layer.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import List, Optional
-
+from typing import Any, Dict, List, Optional
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.mongodb import get_database
 from app.crud.crud_stats import CRUDStats, get_stats_crud
 from app.schemas.stats import StatsCreate, StatsUpdate, StatsResponse
+import logging
 
+logger = logging.getLogger("stats")
+handler = logging.StreamHandler()
+formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 router = APIRouter(prefix="/stats", tags=["Performance Stats"])
+
+DatabaseType = AsyncIOMotorDatabase[Dict[str, Any]]
+StatsDocument = Dict[str, Any]
+
+
+def _ensure_db(db: Optional[DatabaseType]) -> DatabaseType:
+    """Ensure the MongoDB dependency is ready."""
+    if db is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection is not available"
+        )
+    return db
 
 
 @router.post(
@@ -22,8 +42,9 @@ router = APIRouter(prefix="/stats", tags=["Performance Stats"])
 )
 async def create_stats(
     stats_data: StatsCreate,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> StatsResponse:
+    logger.info("POST /stats called")
     """
     Create new performance statistics.
     
@@ -37,7 +58,8 @@ async def create_stats(
     Raises:
         HTTPException: 400 if invalid athlete ID
     """
-    crud = get_stats_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDStats = get_stats_crud(database)
     
     try:
         stats = await crud.create_stats(stats_data)
@@ -57,8 +79,9 @@ async def create_stats(
 )
 async def get_stats(
     stats_id: str,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> StatsResponse:
+    logger.info(f"GET /stats/{stats_id} called")
     """
     Get stats by ID.
     
@@ -72,7 +95,8 @@ async def get_stats(
     Raises:
         HTTPException: 404 if stats not found
     """
-    crud = get_stats_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDStats = get_stats_crud(database)
     stats = await crud.get_stats(stats_id)
     
     if not stats:
@@ -93,7 +117,7 @@ async def get_stats(
 async def get_athlete_stats(
     athlete_id: str,
     season: Optional[str] = Query(None, description="Filter by season (e.g., '2025-2026')"),
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> List[StatsResponse]:
     """
     Get all stats for a specific athlete.
@@ -106,8 +130,9 @@ async def get_athlete_stats(
     Returns:
         List of stats with calculated percentages
     """
-    crud = get_stats_crud(db)
-    stats_list = await crud.get_stats_by_athlete(athlete_id, season)
+    database = _ensure_db(db)
+    crud: CRUDStats = get_stats_crud(database)
+    stats_list: List[StatsDocument] = await crud.get_stats_by_athlete(athlete_id, season)
     
     return [StatsResponse(**stats) for stats in stats_list]
 
@@ -121,7 +146,7 @@ async def get_athlete_stats(
 async def update_stats(
     stats_id: str,
     stats_update: StatsUpdate,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> StatsResponse:
     """
     Update performance statistics.
@@ -137,7 +162,8 @@ async def update_stats(
     Raises:
         HTTPException: 404 if stats not found
     """
-    crud = get_stats_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDStats = get_stats_crud(database)
     stats = await crud.update_stats(stats_id, stats_update)
     
     if not stats:
@@ -157,7 +183,7 @@ async def update_stats(
 )
 async def delete_stats(
     stats_id: str,
-    db = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database)
 ) -> None:
     """
     Delete performance statistics.
@@ -169,7 +195,8 @@ async def delete_stats(
     Raises:
         HTTPException: 404 if stats not found
     """
-    crud = get_stats_crud(db)
+    database = _ensure_db(db)
+    crud: CRUDStats = get_stats_crud(database)
     deleted = await crud.delete_stats(stats_id)
     
     if not deleted:
