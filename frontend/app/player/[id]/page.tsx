@@ -1,9 +1,10 @@
 'use client'
 
-import { use } from 'react'
-import { getPlayerById } from '@/lib/player-data'
+import { use, useState, useEffect } from 'react'
+import { fetchPlayerById } from '@/lib/player-data'
 import AthletePortrait from '@/components/athlete-portrait'
 import PerformanceRadar from '@/components/performance-radar'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface PlayerProfilePageProps {
   params: Promise<{
@@ -13,7 +14,35 @@ interface PlayerProfilePageProps {
 
 export default function PlayerProfilePage({ params }: PlayerProfilePageProps) {
   const { id } = use(params)
-  const player = getPlayerById(id)
+  const [player, setPlayer] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadPlayer() {
+      try {
+        setLoading(true)
+        const data = await fetchPlayerById(id)
+        setPlayer(data)
+      } catch (error) {
+        console.error('Error loading player:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadPlayer()
+  }, [id])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="hidden md:grid md:grid-cols-3 gap-8 p-12 max-w-7xl mx-auto">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      </div>
+    )
+  }
 
   if (!player) {
     return (
@@ -65,9 +94,25 @@ function PlayerBioSection({ player }: { player: any }) {
       {/* Player Name */}
       <div>
         <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight text-balance">
-          {player.name}
+          {player.first_name} {player.last_name}
         </h1>
         <p className="text-lg text-muted-foreground mt-3">{player.position}</p>
+      </div>
+
+      {/* Teams */}
+      <div className="space-y-1">
+        {player.school_team && (
+          <p><span className="font-semibold">School Team:</span> {player.school_team}</p>
+        )}
+        {player.college_team && (
+          <p><span className="font-semibold">College Team:</span> {player.college_team}</p>
+        )}
+        {player.university_team && (
+          <p><span className="font-semibold">University Team:</span> {player.university_team}</p>
+        )}
+        {player.current_team && (
+          <p><span className="font-semibold">Current Team:</span> {player.current_team}</p>
+        )}
       </div>
 
       {/* Bio Paragraph */}
@@ -105,19 +150,28 @@ function PlayerStatsCards({ player }: { player: any }) {
   const stats = [
     {
       label: 'Vertical Reach',
-      value: player.verticalReach.toString(),
+      value:
+        player.verticalReach !== undefined && player.verticalReach !== null
+          ? player.verticalReach.toString()
+          : 'N/A',
       unit: 'cm',
       trend: 5,
     },
     {
       label: 'Service Ace %',
-      value: player.serviceAcePercent.toString(),
+      value:
+        player.serviceAcePercent !== undefined && player.serviceAcePercent !== null
+          ? player.serviceAcePercent.toString()
+          : 'N/A',
       unit: '%',
       trend: 12,
     },
     {
       label: 'Match Wins',
-      value: player.matchWins.toString(),
+      value:
+        player.matchWins !== undefined && player.matchWins !== null
+          ? player.matchWins.toString()
+          : 'N/A',
       unit: 'games',
       trend: 8,
     },

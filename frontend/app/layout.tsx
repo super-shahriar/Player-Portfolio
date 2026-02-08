@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased dark">
+      <body className="font-sans antialiased dark" suppressHydrationWarning>
         <SidebarNavbar />
         <div className="md:ml-72 pb-24 md:pb-0">
           {children}

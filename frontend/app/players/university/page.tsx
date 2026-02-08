@@ -1,14 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PlayerCard from '@/components/player-card'
-import { PLAYERS, getAllUniversities, getPlayersByUniversity } from '@/lib/player-data'
+import { fetchPlayers, fetchPlayersByUniversity } from '@/lib/player-data'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ByUniversityPage() {
-  const universities = getAllUniversities()
-  const [selectedUniversity, setSelectedUniversity] = useState<string | null>(universities[0] || null)
+  const [players, setPlayers] = useState([])
+  const [universities, setUniversities] = useState<string[]>([])
+  const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const filteredPlayers = selectedUniversity ? getPlayersByUniversity(selectedUniversity) : PLAYERS
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const allPlayers = await fetchPlayers()
+        const uniqueUniversities = Array.from(
+          new Set(allPlayers.map((p: any) => p.university))
+        ).sort() as string[]
+        setUniversities(uniqueUniversities)
+        setSelectedUniversity(uniqueUniversities[0] || null)
+      } catch (error) {
+        console.error('Error loading universities:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  useEffect(() => {
+    async function loadPlayersForUniversity() {
+      if (selectedUniversity) {
+        try {
+          const data = await fetchPlayersByUniversity(selectedUniversity)
+          setPlayers(data)
+        } catch (error) {
+          console.error('Error loading players:', error)
+        }
+      }
+    }
+    loadPlayersForUniversity()
+  }, [selectedUniversity])
+
+  const filteredPlayers = players
 
   return (
     <div className="min-h-screen bg-background text-foreground">

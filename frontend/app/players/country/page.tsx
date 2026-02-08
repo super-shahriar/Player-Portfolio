@@ -1,14 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PlayerCard from '@/components/player-card'
-import { PLAYERS, getAllCountries, getPlayersByCountry } from '@/lib/player-data'
+import { fetchPlayers, fetchPlayersByCountry } from '@/lib/player-data'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ByCountryPage() {
-  const countries = getAllCountries()
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(countries[0] || null)
+  const [players, setPlayers] = useState<any[]>([])
+  const [countries, setCountries] = useState<string[]>([])
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const filteredPlayers = selectedCountry ? getPlayersByCountry(selectedCountry) : PLAYERS
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const allPlayers = await fetchPlayers()
+        const uniqueCountries = Array.from(
+          new Set(allPlayers.map((p: any) => p.country))
+        ).sort() as string[]
+        setCountries(uniqueCountries)
+        setSelectedCountry(uniqueCountries[0] || null)
+      } catch (error) {
+        console.error('Error loading countries:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  useEffect(() => {
+    async function loadPlayersForCountry() {
+      if (selectedCountry) {
+        try {
+          const data = await fetchPlayersByCountry(selectedCountry)
+          setPlayers(data)
+        } catch (error) {
+          console.error('Error loading players:', error)
+        }
+      }
+    }
+    loadPlayersForCountry()
+  }, [selectedCountry])
+
+  const filteredPlayers = players
 
   return (
     <div className="min-h-screen bg-background text-foreground">

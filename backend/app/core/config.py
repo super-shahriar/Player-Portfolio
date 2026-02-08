@@ -18,7 +18,14 @@ class Settings(BaseSettings):
     MONGODB_DB_NAME: str = "volleyball_portfolio"
     
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8000",
+        "http://192.168.1.108:3000",
+        "http://192.168.1.108:8000",
+    ]
     
     class Config:
         env_file = ".env"

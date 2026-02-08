@@ -5,11 +5,17 @@ import Link from 'next/link'
 export interface Player {
   id: string
   name: string
+  first_name?: string
+  last_name?: string
   position: string
   university: string
   country: string
   verticalReach: number
   image?: string
+  school_team?: string;
+  college_team?: string;
+  university_team?: string;
+  current_team?: string;
 }
 
 interface PlayerCardProps {
@@ -29,7 +35,6 @@ export default function PlayerCard({ player }: PlayerCardProps) {
               <div className="w-24 h-24 rounded-full bg-muted/50" />
             </div>
           )}
-          
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         </div>
@@ -38,20 +43,17 @@ export default function PlayerCard({ player }: PlayerCardProps) {
         <div className="p-5 space-y-3">
           {/* Name */}
           <div>
-            <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-              {player.name}
-            </h3>
+            <h2 className="text-2xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
+              {player.name ?? `${player.first_name ?? ''} ${player.last_name ?? ''}`.trim()}
+            </h2>
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mt-1">
               {player.position}
             </p>
           </div>
 
-          {/* University & Country */}
-          <div className="flex items-center justify-between text-xs text-foreground/70 space-y-1">
-            <div className="space-y-1 flex-1">
-              <p className="line-clamp-1">{player.university}</p>
-              <p className="font-semibold text-accent">{player.country}</p>
-            </div>
+          {/* Player Name Only */}
+          <div className="flex flex-col gap-1 text-xl md:text-2xl font-extrabold text-primary">
+            {player.name}
           </div>
 
           {/* Standout Stat */}
