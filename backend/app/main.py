@@ -2,9 +2,19 @@
 Main FastAPI application entry point.
 Configures the application, middleware, and lifecycle events.
 """
+
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+ # Configure logger for this module
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+handler.setFormatter(formatter)
+if not logger.hasHandlers():
+    logger.addHandler(handler)
 
 from app.core.config import settings
 from app.db.mongodb import connect_to_mongodb, close_mongodb_connection
@@ -18,10 +28,12 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events.
     """
     # Startup
+    logger.info("Starting up FastAPI application.")
     print(f"🚀 Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     await connect_to_mongodb()
     yield
     # Shutdown
+    logger.info("Shutting down FastAPI application.")
     await close_mongodb_connection()
     print("👋 Application shutdown complete")
 
@@ -52,6 +64,7 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/", tags=["Health"])
 async def root():
     """Root endpoint - API health check."""
+    logger.info("Root endpoint accessed.")
     return {
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
