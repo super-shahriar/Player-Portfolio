@@ -89,6 +89,7 @@ class AthleteModel(BaseModel):
     university_team: Optional[str] = Field(None, max_length=100, description="University team name")
     current_team: Optional[str] = Field(None, max_length=100, description="Current team name (club/professional)")
     bio: Optional[str] = Field(None, max_length=1000)
+    player_photo: Optional[str] = Field(None, description="URL of the player's photo")
     
     # Nested performance stats
     performance_stats: Optional[PerformanceStats] = None

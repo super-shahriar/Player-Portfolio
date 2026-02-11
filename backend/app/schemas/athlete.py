@@ -35,6 +35,7 @@ class AthleteBase(BaseModel):
     current_team: Optional[str] = Field(None, max_length=100, description="Current team name (club/professional)")
     bio: Optional[str] = Field(None, max_length=1000)
     is_active: bool = True
+    player_photo: Optional[str] = Field(None, description="URL of the player's photo")
 
 
 class AthleteCreate(AthleteBase):
@@ -59,6 +60,7 @@ class AthleteUpdate(BaseModel):
     current_team: Optional[str] = Field(None, max_length=100, description="Current team name (club/professional)")
     bio: Optional[str] = Field(None, max_length=1000)
     is_active: Optional[bool] = None
+    player_photo: Optional[str] = Field(None, description="URL of the player's photo")
 
 
 class AthleteInDB(AthleteBase):
