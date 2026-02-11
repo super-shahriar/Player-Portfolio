@@ -1,7 +1,6 @@
 'use client'
 
 import { use, useState, useEffect } from 'react'
-import { fetchPlayerById } from '@/lib/player-data'
 import AthletePortrait from '@/components/athlete-portrait'
 import PerformanceRadar from '@/components/performance-radar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,7 +20,9 @@ export default function PlayerProfilePage({ params }: PlayerProfilePageProps) {
     async function loadPlayer() {
       try {
         setLoading(true)
-        const data = await fetchPlayerById(id)
+        const res = await fetch(`http://localhost:8000/api/v1/athletes/${id}`)
+        if (!res.ok) throw new Error('Player not found')
+        const data = await res.json()
         setPlayer(data)
       } catch (error) {
         console.error('Error loading player:', error)

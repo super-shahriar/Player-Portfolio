@@ -37,7 +37,7 @@ def _ensure_db(db: Optional[DatabaseType]) -> DatabaseType:
     "/",
     response_model=StatsResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Create performance stats",
+    summary="Create performance stat-s-s-s-s-s",
     description="Create a new performance statistics record for an athlete."
 )
 async def create_stats(
