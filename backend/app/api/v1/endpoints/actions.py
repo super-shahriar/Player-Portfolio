@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.mongodb import get_database
 from app.crud.crud_story import CRUDStory, get_story_crud
-import logging
+import logging  ##################################################################
 
 logger = logging.getLogger("actions")
 handler = logging.StreamHandler()
@@ -71,7 +71,7 @@ async def like_story(
     request: LikeRequest,
     db: Optional[DatabaseType] = Depends(get_database)
 ) -> ActionResponse:
-    logger.info(f"POST /actions/like called for story_id={request.story_id} user_id={request.user_id}")
+    logger.info(f"POST /actions/like called for story_id={request.story_id} user_id={request.user_id}")   #############################################################################
     """
     Like or unlike a story.
     

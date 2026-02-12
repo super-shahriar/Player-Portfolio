@@ -70,7 +70,7 @@ This project is like a super-powered digital notebook for volleyball players! It
 5. Copy `.env.example` to `.env` and fill in your MongoDB info.
 6. Start the server: `uvicorn app.main:app --reload`
 7. Open your web browser and go to [http://localhost:8000/docs](http://localhost:8000/docs) to see and try all the features!
-
+8. npm install --legacy-peer-deps , npm install --force , npm run dev
 ---
 
 ## 🧩 Example: Adding a New Player
