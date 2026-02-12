@@ -49,11 +49,11 @@ jobs:
       - name: Run MongoDB tests
         working-directory: backend
         env:
-          # These override your app/core/config.py settings for the CI environment
+          # override app/core/config.py settings for the CI environment
           MONGODB_URL: mongodb://localhost:27017
           MONGODB_DB_NAME: test_db
           PYTHONPATH: ${{ github.workspace }}/backend
-        # We specify the exact test file to keep it focused
+        # We specify the exact test file here 
         run: pytest tests/test_mongodb.py -v
 
       - name: Run backend tests
