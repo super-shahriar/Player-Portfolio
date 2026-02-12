@@ -52,6 +52,7 @@ jobs:
           # These override your app/core/config.py settings for the CI environment
           MONGODB_URL: mongodb://localhost:27017
           MONGODB_DB_NAME: test_db
+          PYTHONPATH: ${{ github.workspace }}/backend
         # We specify the exact test file to keep it focused
         run: pytest tests/test_mongodb.py -v
 
