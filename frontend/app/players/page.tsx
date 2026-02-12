@@ -6,7 +6,7 @@ import PlayerCard from '@/components/player-card'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function AllPlayersPage() {
-  const [players, setPlayers] = useState([])
+  const [players, setPlayers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

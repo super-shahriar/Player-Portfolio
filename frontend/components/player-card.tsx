@@ -23,25 +23,26 @@ interface PlayerCardProps {
 }
 
 export default function PlayerCard({ player }: PlayerCardProps) {
+  // Dummy volleyball photo URL
+  const dummyPhotoUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"
+
   return (
     <Link href={`/player/${player.id}`}>
       <div className="group relative overflow-hidden rounded-xl bg-secondary/40 border border-border/50 hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-primary/20 hover:scale-105">
         {/* Image Container */}
         <div className="relative h-48 bg-gradient-to-b from-secondary to-secondary/50 overflow-hidden">
-          {player.image ? (
-            <img src={player.image || "/placeholder.svg"} alt={player.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-24 h-24 rounded-full bg-muted/50" />
-            </div>
-          )}
+          <img
+            src={player.image || dummyPhotoUrl}
+            alt={player.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          />
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         </div>
 
         {/* Content */}
         <div className="p-5 space-y-3">
-          {/* Name */}
+          {/* Name & Position */}
           <div>
             <h2 className="text-2xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
               {player.name ?? `${player.first_name ?? ''} ${player.last_name ?? ''}`.trim()}
@@ -49,6 +50,12 @@ export default function PlayerCard({ player }: PlayerCardProps) {
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mt-1">
               {player.position}
             </p>
+            {/* Current Team */}
+            {player.current_team && (
+              <p className="text-xs text-muted-foreground font-medium mt-1">
+                {player.current_team}
+              </p>
+            )}
           </div>
 
           {/* Player Name Only */}
