@@ -38,7 +38,7 @@ import sys
 from pymongo import MongoClient
 try:
     MongoClient('mongodb://localhost:27017', serverSelectionTimeoutMS=2000).server_info()
-    print('Mongo readyyyyyyyyyyyyyyyyyyyyyy')
+    print('MongoDB is ready')
     sys.exit(0)
 except Exception:
     sys.exit(1)
