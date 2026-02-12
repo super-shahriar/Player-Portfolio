@@ -2,12 +2,16 @@
 Application configuration settings.
 """
 import os
-from pydantic_settings import BaseSettings
-from typing import Optional
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from motor.motor_asyncio import AsyncIOMotorClient
 
 class Settings(BaseSettings):
     """Application settings with environment variables support."""
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+    )
     
     # Application
     APP_NAME: str = "Volleyball Portfolio API"
@@ -15,8 +19,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # MongoDB
-    # app/core/config.py snippet
-    MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+    MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
     MONGODB_DB_NAME: str = "volleyball_portfolio"
     
     # CORS
@@ -28,10 +31,6 @@ class Settings(BaseSettings):
         "http://192.168.1.108:3000",
         "http://192.168.1.108:8000",
     ]
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 settings = Settings()
@@ -39,8 +38,8 @@ settings = Settings()
 async def connect_to_mongo():
     """Initialize MongoDB connection on app startup"""
     global client, db
-    client = AsyncIOMotorClient(settings.MONGODB_URL)  # ← Uses URI from .env
-    db = client[settings.MONGODB_DB_NAME]  # ← Uses DB name from .env
+    client = AsyncIOMotorClient(settings.MONGODB_URL)  # type: ignore # ← Uses URI from .env
+    db = client[settings.MONGODB_DB_NAME]  # type: ignore # ← Uses DB name from .env
     print(f"✅ Connected to MongoDB: {settings.MONGODB_DB_NAME}")
 
 async def close_mongo_connection():
