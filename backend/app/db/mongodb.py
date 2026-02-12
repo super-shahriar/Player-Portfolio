@@ -19,7 +19,7 @@ On FastAPI startup, `connect_to_mongodb()` is called to establish the async conn
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from app.core.config import settings
 from typing import Optional, Dict, Any
-import logging
+import logging  #######################################################################################
 
 
 class MongoDB:
@@ -50,7 +50,17 @@ async def connect_to_mongodb() -> None:
     Sets up the client and database instance for use throughout the app.
     Logs connection status.
     """
-    mongodb.client = AsyncIOMotorClient(settings.MONGODB_URL)
+    import ssl
+
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = True
+    ssl_context.verify_mode = ssl.CERT_REQUIRED
+
+    mongodb.client = AsyncIOMotorClient(
+        settings.MONGODB_URL,
+        tlsCAFile=None,
+        serverSelectionTimeoutMS=5000,
+    )
     mongodb.db = mongodb.client[settings.MONGODB_DB_NAME]
     logger.info(f"Connected to MongoDB: {settings.MONGODB_DB_NAME}")
 

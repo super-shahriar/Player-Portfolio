@@ -111,8 +111,9 @@ export default function SidebarNavbar() {
 
         {/* Footer */}
         <div className="border-t border-border/30 p-4 mt-auto text-xs text-foreground/50 text-center">
-          <p className="font-medium">Elite Volleyball Scouting</p>
-          <p className="mt-1">Professional Platform</p>
+          <p className="font-medium">@Shahriar Ratul,2026</p>
+          
+          
         </div>
       </nav>
 

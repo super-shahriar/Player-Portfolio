@@ -42,6 +42,7 @@ class CRUDAthlete:
         athlete_dict["created_at"] = datetime.now(timezone.utc)
         athlete_dict["updated_at"] = datetime.now(timezone.utc)
         athlete_dict["performance_stats"] = {}  # Initialize empty stats
+        athlete_dict["player_photo"] = athlete_dict.get("player_photo", None)  # Add this line
         
         # Insert into database
         result = await self.collection.insert_one(athlete_dict)
@@ -130,6 +131,10 @@ class CRUDAthlete:
         
         # Add updated_at timestamp
         update_data["updated_at"] = datetime.now(timezone.utc)
+        
+        # Add this line to handle player_photo updates
+        if "player_photo" in update_data:
+            update_data["player_photo"] = update_data["player_photo"]
         
         # Update document atomically
         updated_athlete = await self.collection.find_one_and_update(
