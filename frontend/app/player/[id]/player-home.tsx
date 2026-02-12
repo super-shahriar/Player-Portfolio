@@ -63,7 +63,7 @@ function PlayerHome({ params }: PlayerProfilePageProps) {
       <div className="hidden md:grid md:grid-cols-3 gap-8 p-12 max-w-7xl mx-auto">
         {/* Left Column: Athlete Portrait */}
         <div className="flex items-center justify-center">
-          <AthletePortrait jerseyNumber={player.jersey_number} />
+          <AthletePortrait jerseyNumber={player.jersey_number} playerImage={player.player_photo} />
         </div>
 
         {/* Center Column: Bio & Trivia */}
@@ -80,7 +80,7 @@ function PlayerHome({ params }: PlayerProfilePageProps) {
 
       {/* Mobile: Vertical stack */}
       <div className="md:hidden flex flex-col space-y-8 p-6">
-        <AthletePortrait jerseyNumber={player.jersey_number} />
+        <AthletePortrait jerseyNumber={player.jersey_number} playerImage={player.player_photo} />
         <PlayerBioSection player={player} />
         <PerformanceRadar stats={player.stats} />
         <PlayerStatsCards player={player} />
@@ -131,13 +131,6 @@ function PlayerBioSection({ player }: { player: any }) {
         )}
       </div>
 
-      {/* Bio Paragraph */}
-      {player.bio && (
-        <div className="space-y-4 mt-2 w-full">
-          <p className="text-foreground/80 leading-relaxed">{player.bio}</p>
-        </div>
-      )}
-
       {/* Trivia/Quick Facts */}
       <div className="space-y-3 mt-2 w-full">
         <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Quick Facts</p>
@@ -177,9 +170,19 @@ function PlayerBioSection({ player }: { player: any }) {
                 <p className="text-foreground font-semibold mt-1">{player.performance_stats.hitting_rating ?? 'N/A'}</p>
               </div>
             </>
+
+
+
           )}
         </div>
       </div>
+
+      {/* Bio Paragraph (moved below Quick Facts) */}
+      {player.bio && (
+        <div className="space-y-4 mt-2 w-full">
+          <p className="text-foreground/80 leading-relaxed">{player.bio}</p>
+        </div>
+      )}
     </div>
   )
 }

@@ -12,6 +12,7 @@ export interface Player {
   country: string
   verticalReach: number
   image?: string
+  player_photo?: string
   school_team?: string;
   college_team?: string;
   university_team?: string;
@@ -32,7 +33,7 @@ export default function PlayerCard({ player }: PlayerCardProps) {
         {/* Image Container */}
         <div className="relative h-48 bg-gradient-to-b from-secondary to-secondary/50 overflow-hidden">
           <img
-            src={player.image || dummyPhotoUrl}
+            src={player.player_photo || player.image || dummyPhotoUrl}
             alt={player.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
