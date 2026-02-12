@@ -1,6 +1,7 @@
 """
 Application configuration settings.
 """
+import os
 from pydantic_settings import BaseSettings
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -14,7 +15,8 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # MongoDB
-    MONGODB_URL: str = "mongodb://localhost:27017"
+    # app/core/config.py snippet
+    MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
     MONGODB_DB_NAME: str = "volleyball_portfolio"
     
     # CORS
