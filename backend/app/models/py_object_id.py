@@ -2,6 +2,7 @@
 Custom PyObjectId type for handling MongoDB ObjectId in Pydantic models.
 Converts BSON ObjectId to string for JSON serialization.
 """
+
 from bson import ObjectId
 from pydantic import GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
@@ -14,7 +15,7 @@ class PyObjectId(ObjectId):
     Custom ObjectId type that integrates with Pydantic V2.
     Handles MongoDB _id field conversion to/from string.
     """
-    
+
     @classmethod
     def __get_pydantic_core_schema__(
         cls,
@@ -40,18 +41,18 @@ class PyObjectId(ObjectId):
                 return_schema=core_schema.str_schema(),
             ),
         )
-    
+
     @classmethod
     def validate(cls, v: Any) -> ObjectId:
         """
         Validate and convert input to ObjectId.
-        
+
         Args:
             v: Input value (string or ObjectId)
-            
+
         Returns:
             ObjectId instance
-            
+
         Raises:
             ValueError: If value cannot be converted to ObjectId
         """
@@ -60,7 +61,7 @@ class PyObjectId(ObjectId):
         if isinstance(v, str) and ObjectId.is_valid(v):
             return ObjectId(v)
         raise ValueError("Invalid ObjectId")
-    
+
     @classmethod
     def __get_pydantic_json_schema__(
         cls, core_schema: core_schema.CoreSchema, handler: GetJsonSchemaHandler

@@ -3,8 +3,8 @@ MongoDB database connection setup using Motor (async driver).
 
 Theory:
 Motor is an asynchronous Python driver for MongoDB, built to integrate seamlessly with async frameworks like
-FastAPI and asyncio. Unlike synchronous drivers (like PyMongo), Motor enables non-blocking database operations, 
-allowing your FastAPI app to handle many requests concurrently without waiting for database responses. 
+FastAPI and asyncio. Unlike synchronous drivers (like PyMongo), Motor enables non-blocking database operations,
+allowing your FastAPI app to handle many requests concurrently without waiting for database responses.
 This is ideal for high-performance APIs and real-time applications.
 
 This module defines:
@@ -16,6 +16,7 @@ This module defines:
 Usage:
 On FastAPI startup, `connect_to_mongodb()` is called to establish the async connection. On shutdown, `close_mongodb_connection()` safely closes it. The `get_database()` function is used as a dependency to inject the database instance into endpoints and repository classes.
 """
+
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from app.core.config import settings
 from typing import Optional, Dict, Any
@@ -28,6 +29,7 @@ class MongoDB:
     Holds the Motor async client and database instance.
     Used for managing the application's MongoDB connection lifecycle.
     """
+
     client: Optional[AsyncIOMotorClient[Dict[str, Any]]] = None
     db: Optional[AsyncIOMotorDatabase[Dict[str, Any]]] = None
 

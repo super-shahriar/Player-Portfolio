@@ -2,9 +2,9 @@
 API v1 router aggregation.
 Combines all endpoint routers for version 1 of the API.
 """
+
 from fastapi import APIRouter
 from app.api.v1.endpoints import athletes, stats, stories, actions
-
 
 api_router = APIRouter()
 

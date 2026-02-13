@@ -2,6 +2,7 @@
 FastAPI route endpoints for Story/Highlight management.
 Handles story uploads, highlights, and story retrieval.
 """
+
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from typing import Any, Dict, List, Optional
 from datetime import datetime
@@ -29,13 +30,14 @@ def _ensure_db(db: Optional[DatabaseType]) -> DatabaseType:
     if db is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection is not available"
+            detail="Database connection is not available",
         )
     return db
 
 
 class StoryCreate(BaseModel):
     """Schema for creating a story."""
+
     athlete_id: str
     story_type: str = "image"
     media_url: str
@@ -46,6 +48,7 @@ class StoryCreate(BaseModel):
 
 class StoryResponse(BaseModel):
     """Schema for story response."""
+
     id: str
     athlete_id: str
     story_type: str
@@ -68,11 +71,10 @@ class StoryResponse(BaseModel):
     response_model=StoryResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Upload a new story",
-    description="Upload a story (image/video). Stories expire after 24 hours unless marked as highlight."
+    description="Upload a story (image/video). Stories expire after 24 hours unless marked as highlight.",
 )
 async def upload_story(
-    story_data: StoryCreate,
-    db: Optional[DatabaseType] = Depends(get_database)
+    story_data: StoryCreate, db: Optional[DatabaseType] = Depends(get_database)
 ) -> StoryResponse:
     logger.info("POST /stories/upload-story called")
     """
@@ -96,7 +98,7 @@ async def upload_story(
     response_model=StoryResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Upload a highlight",
-    description="Upload a highlight (permanent story pinned to profile)."
+    description="Upload a highlight (permanent story pinned to profile).",
 )
 async def upload_highlight(
     athlete_id: str = Form(...),
@@ -104,9 +106,11 @@ async def upload_highlight(
     media_url: str = Form(...),
     story_type: str = Form("image"),
     caption: Optional[str] = Form(None),
-    db: Optional[DatabaseType] = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database),
 ) -> StoryResponse:
-    logger.info(f"POST /stories/upload-highlight called for athlete_id={athlete_id} title={highlight_title}")
+    logger.info(
+        f"POST /stories/upload-highlight called for athlete_id={athlete_id} title={highlight_title}"
+    )
     """
     Upload a highlight (permanent story).
     
@@ -123,16 +127,16 @@ async def upload_highlight(
     """
     database = _ensure_db(db)
     crud: CRUDStory = get_story_crud(database)
-    
+
     story_data: Dict[str, Any] = {
         "athlete_id": athlete_id,
         "story_type": story_type,
         "media_url": media_url,
         "caption": caption,
         "is_highlight": True,
-        "highlight_title": highlight_title
+        "highlight_title": highlight_title,
     }
-    
+
     story = await crud.create_story(story_data)
     return StoryResponse(**story)
 
@@ -141,14 +145,16 @@ async def upload_highlight(
     "/athlete/{athlete_id}",
     response_model=List[StoryResponse],
     summary="Get athlete's active stories",
-    description="Get all active (non-expired) stories for an athlete."
+    description="Get all active (non-expired) stories for an athlete.",
 )
 async def get_athlete_stories(
     athlete_id: str,
     include_expired: bool = False,
-    db: Optional[DatabaseType] = Depends(get_database)
+    db: Optional[DatabaseType] = Depends(get_database),
 ) -> List[StoryResponse]:
-    logger.info(f"GET /stories/athlete/{athlete_id} called include_expired={include_expired}")
+    logger.info(
+        f"GET /stories/athlete/{athlete_id} called include_expired={include_expired}"
+    )
     """
     Get athlete's stories.
     
@@ -162,7 +168,9 @@ async def get_athlete_stories(
     """
     database = _ensure_db(db)
     crud: CRUDStory = get_story_crud(database)
-    stories: List[StoryDocument] = await crud.get_active_stories(athlete_id, include_expired)
+    stories: List[StoryDocument] = await crud.get_active_stories(
+        athlete_id, include_expired
+    )
     return [StoryResponse(**story) for story in stories]
 
 
@@ -170,11 +178,10 @@ async def get_athlete_stories(
     "/highlights/{athlete_id}",
     response_model=List[StoryResponse],
     summary="Get athlete's highlights",
-    description="Get all highlights (permanent stories) for an athlete."
+    description="Get all highlights (permanent stories) for an athlete.",
 )
 async def get_athlete_highlights(
-    athlete_id: str,
-    db: Optional[DatabaseType] = Depends(get_database)
+    athlete_id: str, db: Optional[DatabaseType] = Depends(get_database)
 ) -> List[StoryResponse]:
     logger.info(f"GET /stories/highlights/{athlete_id} called")
     """
@@ -197,11 +204,10 @@ async def get_athlete_highlights(
     "/{story_id}",
     response_model=StoryResponse,
     summary="Get story by ID",
-    description="Retrieve a specific story by its ID and increment view count."
+    description="Retrieve a specific story by its ID and increment view count.",
 )
 async def get_story(
-    story_id: str,
-    db: Optional[DatabaseType] = Depends(get_database)
+    story_id: str, db: Optional[DatabaseType] = Depends(get_database)
 ) -> StoryResponse:
     logger.info(f"GET /stories/{story_id} called")
     """
@@ -220,13 +226,13 @@ async def get_story(
     database = _ensure_db(db)
     crud: CRUDStory = get_story_crud(database)
     story = await crud.get_story(story_id, increment_view=True)
-    
+
     if not story:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Story with ID {story_id} not found"
+            detail=f"Story with ID {story_id} not found",
         )
-    
+
     return StoryResponse(**story)
 
 
@@ -234,11 +240,10 @@ async def get_story(
     "/{story_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete story",
-    description="Delete a story or highlight."
+    description="Delete a story or highlight.",
 )
 async def delete_story(
-    story_id: str,
-    db: Optional[DatabaseType] = Depends(get_database)
+    story_id: str, db: Optional[DatabaseType] = Depends(get_database)
 ) -> None:
     logger.info(f"DELETE /stories/{story_id} called")
     """
@@ -254,9 +259,9 @@ async def delete_story(
     database = _ensure_db(db)
     crud: CRUDStory = get_story_crud(database)
     deleted = await crud.delete_story(story_id)
-    
+
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Story with ID {story_id} not found"
+            detail=f"Story with ID {story_id} not found",
         )

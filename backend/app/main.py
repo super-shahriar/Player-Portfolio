@@ -7,11 +7,12 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
- # Configure logger for this module
+
+# Configure logger for this module
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+formatter = logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 handler.setFormatter(formatter)
 if not logger.hasHandlers():
     logger.addHandler(handler)
@@ -45,7 +46,7 @@ app = FastAPI(
     description="Professional Volleyball Portfolio Backend API for managing athlete profiles and performance statistics",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Configure CORS
@@ -69,24 +70,17 @@ async def root():
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "running",
-        "docs": "/docs"
+        "docs": "/docs",
     }
 
 
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "database": "connected"
-    }
+    return {"status": "healthy", "database": "connected"}
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=settings.DEBUG
-    )
+
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=settings.DEBUG)

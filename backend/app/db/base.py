@@ -10,7 +10,7 @@ from typing import Any, Optional
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+formatter = logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 handler.setFormatter(formatter)
 if not logger.hasHandlers():
     logger.addHandler(handler)
@@ -19,10 +19,10 @@ if not logger.hasHandlers():
 def string_to_objectid(id_str: str) -> Optional[ObjectId]:
     """
     Convert string to MongoDB ObjectId.
-    
+
     Args:
         id_str: String representation of ObjectId
-        
+
     Returns:
         ObjectId if valid, None otherwise
     """
@@ -36,10 +36,10 @@ def string_to_objectid(id_str: str) -> Optional[ObjectId]:
 def objectid_to_string(obj_id: ObjectId) -> str:
     """
     Convert MongoDB ObjectId to string.
-    
+
     Args:
         obj_id: ObjectId instance
-        
+
     Returns:
         String representation
     """
@@ -51,10 +51,10 @@ def objectid_to_string(obj_id: ObjectId) -> str:
 def convert_id_field(document: dict[str, Any]) -> dict[str, Any]:
     """
     Convert _id field from ObjectId to string in document.
-    
+
     Args:
         document: MongoDB document with _id field
-        
+
     Returns:
         Document with _id converted to id (string)
     """
@@ -67,14 +67,16 @@ def convert_id_field(document: dict[str, Any]) -> dict[str, Any]:
     return document
 
 
-def prepare_document_for_response(document: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+def prepare_document_for_response(
+    document: Optional[dict[str, Any]],
+) -> Optional[dict[str, Any]]:
     """
     Prepare MongoDB document for API response.
     Converts _id to id string and handles None case.
-    
+
     Args:
         document: MongoDB document or None
-        
+
     Returns:
         Prepared document or None
     """

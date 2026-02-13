@@ -1,19 +1,19 @@
 import logging
 import pytest
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from app.db.mongodb import ( ## importing functions from app/db/mongodb.py
-    connect_to_mongodb, 
-    close_mongodb_connection, 
+from app.db.mongodb import (  ## importing functions from app/db/mongodb.py
+    connect_to_mongodb,
+    close_mongodb_connection,
     get_database,
-    mongodb
+    mongodb,
 )
 
 # Configure logger
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+
 
 @pytest.mark.asyncio
 async def test_mongodb_lifecycle():
@@ -21,7 +21,7 @@ async def test_mongodb_lifecycle():
     Tests the full lifecycle: connection, usage, and disconnection.
     """
     logger.info("Starting MongoDB lifecycle test")
-    
+
     # 1. Test Initial State
     logger.info("Testing initial state: client and db should be None")
     assert mongodb.client is None
@@ -32,14 +32,14 @@ async def test_mongodb_lifecycle():
     logger.info("Connecting to MongoDB...")
     await connect_to_mongodb()
     logger.info("✓ MongoDB connected successfully")
-    
+
     assert mongodb.client is not None
     assert mongodb.db is not None
-    
+
     # Verify we can actually ping the database
     # This ensures the MONGODB_URL in settings is correct
     logger.info("Pinging MongoDB...")
-    ping_result = await mongodb.db.command("ping") # type: ignore
+    ping_result = await mongodb.db.command("ping")  # type: ignore
     assert ping_result["ok"] == 1.0
     logger.info("✓ MongoDB ping successful")
 
@@ -54,8 +54,8 @@ async def test_mongodb_lifecycle():
     logger.info("Disconnecting from MongoDB...")
     await close_mongodb_connection()
     logger.info("✓ MongoDB disconnected successfully")
-    # Note: Motor client.close() is synchronous internally, 
+    # Note: Motor client.close() is synchronous internally,
     # but we call our async wrapper.
-    
-    # In Motor, closing the client doesn't nullify the object, 
+
+    # In Motor, closing the client doesn't nullify the object,
     # it just shuts down the socket pools.
