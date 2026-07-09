@@ -1,6 +1,13 @@
-import { Mail, MapPin, Download, Github, Linkedin } from 'lucide-react'
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Mail, MapPin, Download, Github, Linkedin, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import PlayerCard, { type Player } from '@/components/player-card'
+import { fetchPlayers } from '@/lib/player-data'
 
 const skillGroups = [
   { label: 'Programming', skills: ['Python', 'C++', 'C', 'Java', 'JavaScript', 'TypeScript', 'Dart'] },
@@ -118,6 +125,25 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export default function AboutPage() {
+  const [vbProfile, setVbProfile] = useState<Player | null>(null)
+  const [vbLoading, setVbLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadVbProfile() {
+      try {
+        const players = await fetchPlayers()
+        const match = players.find((p) => p.name?.trim().toLowerCase() === 'shahriar ratul')
+        setVbProfile(match ?? null)
+      } catch (err) {
+        console.error('Failed to load volleyball profile:', err)
+      } finally {
+        setVbLoading(false)
+      }
+    }
+
+    loadVbProfile()
+  }, [])
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-16 space-y-16">
@@ -164,6 +190,36 @@ export default function AboutPage() {
               </a>
             </Button>
           </div>
+        </section>
+
+        {/* Volleyball */}
+        <section>
+          <SectionLabel>Volleyball</SectionLabel>
+          {vbLoading ? (
+            <Skeleton className="h-64 w-full max-w-xs" />
+          ) : vbProfile ? (
+            <div className="flex flex-col sm:flex-row items-start gap-6">
+              <div className="w-full max-w-xs flex-shrink-0">
+                <PlayerCard player={vbProfile} />
+              </div>
+              <div className="space-y-3 pt-1">
+                <p className="text-muted-foreground leading-relaxed max-w-xl">
+                  Off the keyboard, I&apos;m the captain of the NSU Volleyball Team — same passion
+                  for the game that inspired me to build this platform. Here&apos;s my own player
+                  profile, pulled live from the same database every athlete on this site uses.
+                </p>
+                <Link
+                  href={`/player/${vbProfile.id}`}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  View full player profile
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Player profile unavailable right now.</p>
+          )}
         </section>
 
         {/* Skills */}
