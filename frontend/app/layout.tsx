@@ -2,6 +2,9 @@ import React from "react"
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import SidebarNavbar from '@/components/sidebar-navbar'
+import { CartProvider } from '@/components/cart-context'
+import { Toaster } from '@/components/ui/sonner'
+import AnalyticsGate from '@/components/analytics-gate'
 
 import './globals.css'
 
@@ -22,10 +25,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased dark" suppressHydrationWarning>
-        <SidebarNavbar />
-        <div className="md:ml-72 pb-24 md:pb-0">
-          {children}
-        </div>
+        <AnalyticsGate gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
+        <CartProvider>
+          <SidebarNavbar />
+          <div className="md:ml-72 pb-24 md:pb-0">
+            {children}
+          </div>
+        </CartProvider>
+        <Toaster />
       </body>
     </html>
   )
