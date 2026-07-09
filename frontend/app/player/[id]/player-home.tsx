@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react'
 import AthletePortrait from '@/components/athlete-portrait'
 import PerformanceRadar from '@/components/performance-radar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { trackViewPlayerProfile } from '@/lib/analytics'
 
 interface PlayerProfilePageProps {
   params: Promise<{
@@ -32,6 +33,19 @@ function PlayerHome({ params }: PlayerProfilePageProps) {
     }
     loadPlayer()
   }, [id])
+
+  useEffect(() => {
+    if (player) {
+      trackViewPlayerProfile({
+        id: player.id,
+        first_name: player.first_name,
+        last_name: player.last_name,
+        position: player.position,
+        university_team: player.university_team,
+        current_team: player.current_team,
+      })
+    }
+  }, [player])
 
   if (loading) {
     return (
