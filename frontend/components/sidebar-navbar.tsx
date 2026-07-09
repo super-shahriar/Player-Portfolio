@@ -1,11 +1,31 @@
 'use client'
 
-import { Users, Globe, School, Building2, Trophy, Zap, BookOpen, Mail, Info } from 'lucide-react'
+import {
+  Users,
+  Globe,
+  School,
+  Building2,
+  Trophy,
+  Zap,
+  BookOpen,
+  Mail,
+  Info,
+  ShoppingBag,
+  CircleDot,
+  Footprints,
+  Grid3x3,
+  Shirt,
+  Package,
+  ShoppingCart,
+  Receipt,
+} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useCart } from '@/components/cart-context'
 
 export default function SidebarNavbar() {
   const pathname = usePathname()
+  const { itemCount } = useCart()
 
   const primaryNavItems = [
     { id: 'all-players', icon: Users, label: 'All Players', href: '/players' },
@@ -16,17 +36,29 @@ export default function SidebarNavbar() {
     { id: 'top-prospects', icon: Zap, label: 'Top Prospects', href: '/players/highlights' },
   ]
 
+  const shopNavItems = [
+    { id: 'all-products', icon: ShoppingBag, label: 'All Products', href: '/shop' },
+    { id: 'shop-volleyballs', icon: CircleDot, label: 'Volleyballs', href: '/shop?category=Volleyballs' },
+    { id: 'shop-shoes', icon: Footprints, label: 'Shoes', href: '/shop?category=Shoes' },
+    { id: 'shop-nets', icon: Grid3x3, label: 'Nets', href: '/shop?category=Nets' },
+    { id: 'shop-apparel', icon: Shirt, label: 'Apparel', href: '/shop?category=Apparel' },
+    { id: 'shop-accessories', icon: Package, label: 'Accessories', href: '/shop?category=Accessories' },
+    { id: 'cart', icon: ShoppingCart, label: 'Cart', href: '/cart', badge: itemCount },
+    { id: 'orders', icon: Receipt, label: 'Orders', href: '/orders' },
+  ]
+
   const secondaryNavItems = [
     { id: 'highlights', icon: BookOpen, label: 'Highlights', href: '#' },
     { id: 'contact', icon: Mail, label: 'Contact', href: '#' },
-    { id: 'about', icon: Info, label: 'About', href: '#' },
+    { id: 'about', icon: Info, label: 'About', href: '/about' },
   ]
 
   const isActive = (href: string) => pathname === href || (href === '/' && pathname === '/')
 
-  const NavLink = ({ item }: { item: typeof primaryNavItems[0] }) => {
+  const NavLink = ({ item }: { item: typeof primaryNavItems[0] | typeof shopNavItems[0] }) => {
     const Icon = item.icon
     const active = isActive(item.href)
+    const badge = 'badge' in item ? item.badge : undefined
 
     return (
       <Link href={item.href} className="block">
@@ -38,7 +70,12 @@ export default function SidebarNavbar() {
           }`}
         >
           <Icon size={20} />
-          <span className="font-medium text-sm">{item.label}</span>
+          <span className="font-medium text-sm flex-1">{item.label}</span>
+          {!!badge && (
+            <span className="min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+              {badge}
+            </span>
+          )}
           {active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-lg" />}
         </div>
       </Link>
@@ -84,7 +121,7 @@ export default function SidebarNavbar() {
           </Link>
         </div>
 
-        {/* Primary Navigation */}
+        {/* Navigation (Discovery, Shop, Resources scroll together as one region) */}
         <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           <div className="text-xs font-bold uppercase tracking-widest text-foreground/40 px-2 mb-4">
             Discovery
@@ -92,15 +129,16 @@ export default function SidebarNavbar() {
           {primaryNavItems.map((item) => (
             <NavLink key={item.id} item={item} />
           ))}
-        </div>
 
-        {/* Divider */}
-        <div className="px-4 py-2">
-          <div className="h-px bg-border/30" />
-        </div>
+          <div className="text-xs font-bold uppercase tracking-widest text-foreground/40 px-2 mb-4 mt-6">
+            Shop
+          </div>
+          {shopNavItems.map((item) => (
+            <NavLink key={item.id} item={item} />
+          ))}
 
-        {/* Secondary Navigation */}
-        <div className="px-4 py-6 space-y-1">
+          <div className="h-px bg-border/30 my-6" />
+
           <div className="text-xs font-bold uppercase tracking-widest text-foreground/40 px-2 mb-4">
             Resources
           </div>
