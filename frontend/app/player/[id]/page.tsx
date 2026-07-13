@@ -3,7 +3,7 @@ import PlayerHome from './player-home'
 
 export async function generateStaticParams() {
   return [
-    'demo-1', 'demo-2', 'demo-3', 'demo-4',
+    'shahriar-ratul',
     'menon-pranto',
     'haikyuu-hinata', 'haikyuu-kageyama', 'haikyuu-tanaka', 'haikyuu-nishinoya',
     'haikyuu-daichi', 'haikyuu-sugawara', 'haikyuu-asahi', 'haikyuu-tsukishima',
