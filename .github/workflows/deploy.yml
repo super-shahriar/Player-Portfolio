@@ -33,6 +33,8 @@ jobs:
 
       - name: Build static export
         working-directory: frontend
+        env:
+          NEXT_PUBLIC_GTM_ID: ${{ vars.NEXT_PUBLIC_GTM_ID }}
         run: npm run build
 
       - uses: actions/configure-pages@v5
