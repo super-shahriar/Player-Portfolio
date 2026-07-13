@@ -1,11 +1,11 @@
 // app/product/[id]/page.tsx
 import ProductDetailPage from './product-detail'
 
-// No real product IDs are known at build time without a live backend; a single
-// placeholder keeps `output: export` happy. It renders the same "not found" state
-// as any other id would without a backend.
 export async function generateStaticParams() {
-  return [{ id: 'placeholder' }]
+  return [
+    'demo-prod-1', 'demo-prod-2', 'demo-prod-3', 'demo-prod-4', 'demo-prod-5',
+    'demo-prod-6', 'demo-prod-7', 'demo-prod-8', 'demo-prod-9', 'demo-prod-10',
+  ].map((id) => ({ id }))
 }
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {

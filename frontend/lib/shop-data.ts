@@ -50,6 +50,129 @@ export type Order = {
   created_at: string
 }
 
+const FALLBACK_PRODUCTS: Product[] = [
+  {
+    id: 'demo-prod-1',
+    name: 'Pro Match Volleyball',
+    description: 'Official size and weight, synthetic leather cover for indoor competition play.',
+    category: 'Volleyballs',
+    price: 49.99,
+    stock: 25,
+    image_url: 'https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-2',
+    name: 'Beach Volleyball',
+    description: 'Water-resistant panel construction built for outdoor sand courts.',
+    category: 'Volleyballs',
+    price: 34.99,
+    stock: 40,
+    image_url: 'https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-3',
+    name: 'Elite Court Shoes',
+    description: 'Lightweight cushioned sole with lateral support for quick direction changes.',
+    category: 'Shoes',
+    price: 89.99,
+    stock: 15,
+    image_url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-4',
+    name: 'Ankle Support Shoes',
+    description: 'High-top design with reinforced ankle collar for added stability on landings.',
+    category: 'Shoes',
+    price: 74.99,
+    stock: 10,
+    image_url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-5',
+    name: 'Tournament Net System',
+    description: 'Height-adjustable aluminum posts with regulation net, ideal for club and school teams.',
+    category: 'Nets',
+    price: 199.99,
+    stock: 5,
+    image_url: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-6',
+    name: 'Portable Practice Net',
+    description: 'Quick-assembly net for driveway or backyard practice sessions.',
+    category: 'Nets',
+    price: 59.99,
+    stock: 12,
+    image_url: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-7',
+    name: 'Team Jersey',
+    description: 'Moisture-wicking fabric with breathable mesh panels.',
+    category: 'Apparel',
+    price: 39.99,
+    stock: 30,
+    image_url: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-8',
+    name: 'Performance Shorts',
+    description: 'Stretch-fit compression shorts for unrestricted movement.',
+    category: 'Apparel',
+    price: 24.99,
+    stock: 20,
+    image_url: 'https://images.unsplash.com/photo-1571945153237-4929e783af4a?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-9',
+    name: 'Knee Pads',
+    description: 'Shock-absorbing foam padding for safe diving and floor defense.',
+    category: 'Accessories',
+    price: 19.99,
+    stock: 50,
+    image_url: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-prod-10',
+    name: 'Ankle Braces',
+    description: 'Adjustable compression wrap for extra joint support during play.',
+    category: 'Accessories',
+    price: 14.99,
+    stock: 0,
+    image_url: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+]
+
 // Parse the FastAPI error `detail` so callers can toast a useful message.
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -67,18 +190,31 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json()
 }
 
+// Falls back to demo products when no backend is available (e.g. the static GitHub Pages deploy).
 export async function fetchProducts(category?: ProductCategory): Promise<Product[]> {
-  const params = new URLSearchParams({ limit: '100', is_active: 'true' })
-  if (category) {
-    params.set('category', category)
+  try {
+    const params = new URLSearchParams({ limit: '100', is_active: 'true' })
+    if (category) {
+      params.set('category', category)
+    }
+    const response = await fetch(`${DEFAULT_API_BASE}/products/?${params}`)
+    return await handleResponse<Product[]>(response)
+  } catch (error) {
+    console.error('Failed to load products from backend, using demo data:', error)
+    return category ? FALLBACK_PRODUCTS.filter((product) => product.category === category) : FALLBACK_PRODUCTS
   }
-  const response = await fetch(`${DEFAULT_API_BASE}/products/?${params}`)
-  return handleResponse<Product[]>(response)
 }
 
 export async function fetchProduct(productId: string): Promise<Product> {
-  const response = await fetch(`${DEFAULT_API_BASE}/products/${productId}`)
-  return handleResponse<Product>(response)
+  try {
+    const response = await fetch(`${DEFAULT_API_BASE}/products/${productId}`)
+    return await handleResponse<Product>(response)
+  } catch (error) {
+    const fallback = FALLBACK_PRODUCTS.find((product) => product.id === productId)
+    if (!fallback) throw error
+    console.error('Failed to load product from backend, using demo data:', error)
+    return fallback
+  }
 }
 
 export async function fetchCart(guestId: string): Promise<Cart> {
