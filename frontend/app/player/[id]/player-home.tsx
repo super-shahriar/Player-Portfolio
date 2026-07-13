@@ -77,7 +77,7 @@ function PlayerHome({ params }: PlayerProfilePageProps) {
       <div className="hidden md:grid md:grid-cols-3 gap-8 p-12 max-w-7xl mx-auto">
         {/* Left Column: Athlete Portrait */}
         <div className="flex items-center justify-center">
-          <AthletePortrait jerseyNumber={player.jersey_number} playerImage={player.player_photo} />
+          <AthletePortrait jerseyNumber={player.jersey_number} playerImage={player.player_photo || player.image} />
         </div>
 
         {/* Center Column: Bio & Trivia */}
@@ -94,7 +94,7 @@ function PlayerHome({ params }: PlayerProfilePageProps) {
 
       {/* Mobile: Vertical stack */}
       <div className="md:hidden flex flex-col space-y-8 p-6">
-        <AthletePortrait jerseyNumber={player.jersey_number} playerImage={player.player_photo} />
+        <AthletePortrait jerseyNumber={player.jersey_number} playerImage={player.player_photo || player.image} />
         <PlayerBioSection player={player} />
         <PerformanceRadar stats={player.stats} />
         <PlayerStatsCards player={player} />
