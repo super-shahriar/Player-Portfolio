@@ -144,7 +144,7 @@ function normalizePlayer(player: RawPlayer, index: number): PlayerRecord {
 }
 
 // Fetch all players from the backend API.
-// If the backend is unavailable, surface the error so the UI only shows real data.
+// Falls back to demo data when no backend is available (e.g. the static GitHub Pages deploy).
 export async function fetchPlayers() {
   try {
     const response = await fetch(`${DEFAULT_API_BASE}/athletes/`)
@@ -159,9 +159,14 @@ export async function fetchPlayers() {
 
     return data.map((player: RawPlayer, index: number) => normalizePlayer(player, index))
   } catch (error) {
-    console.error('Failed to load players from backend:', error)
-    throw new Error('Failed to fetch players')
+    console.error('Failed to load players from backend, using demo data:', error)
+    return FALLBACK_PLAYERS.map((player, index) => normalizePlayer(player, index))
   }
+}
+
+export async function fetchPlayerById(id: string) {
+  const allPlayers = await fetchPlayers()
+  return allPlayers.find((player) => player.id === id) ?? null
 }
 
 // Fetch players filtered by university

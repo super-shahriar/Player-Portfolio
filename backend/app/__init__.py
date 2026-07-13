@@ -1,1 +1,0 @@
-# FastAPI Volleyball Portfolio Backend

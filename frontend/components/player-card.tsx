@@ -11,6 +11,7 @@ export interface Player {
   university: string
   country: string
   verticalReach: number
+  height_cm?: number
   image?: string
   player_photo?: string
   school_team?: string;
@@ -67,9 +68,9 @@ export default function PlayerCard({ player }: PlayerCardProps) {
           {/* Standout Stat */}
           <div className="pt-3 border-t border-border/30">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">
-              Vertical Reach
+              Height
             </p>
-            <p className="text-xl font-bold text-primary">{player.verticalReach} cm</p>
+            <p className="text-xl font-bold text-primary">{player.height_cm ?? '—'} cm</p>
           </div>
         </div>
 

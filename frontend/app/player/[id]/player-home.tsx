@@ -5,6 +5,7 @@ import AthletePortrait from '@/components/athlete-portrait'
 import PerformanceRadar from '@/components/performance-radar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { trackViewPlayerProfile } from '@/lib/analytics'
+import { fetchPlayerById } from '@/lib/player-data'
 
 interface PlayerProfilePageProps {
   params: Promise<{
@@ -21,9 +22,8 @@ function PlayerHome({ params }: PlayerProfilePageProps) {
     async function loadPlayer() {
       try {
         setLoading(true)
-        const res = await fetch(`http://localhost:8000/api/v1/athletes/${id}`)
-        if (!res.ok) throw new Error('Player not found')
-        const data = await res.json()
+        const data = await fetchPlayerById(id)
+        if (!data) throw new Error('Player not found')
         setPlayer(data)
       } catch (error) {
         console.error('Error loading player:', error)
